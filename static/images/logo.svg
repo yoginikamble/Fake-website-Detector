@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#0066ff"/>
+      <stop offset="100%" stop-color="#051937"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Shield Glow -->
+  <path d="M50 5 L88 20 C88 58 50 90 50 90 C50 90 12 58 12 20 Z" fill="none" stroke="url(#shieldGrad)" stroke-width="4" stroke-linejoin="round" />
+  <!-- Inner Shield -->
+  <path d="M50 12 L82 25 C82 56 50 82 50 82 C50 82 18 56 18 25 Z" fill="#0c162d" stroke="#00e5ff" stroke-width="1.5" />
+  <!-- Circuit Nodes & Lines -->
+  <path d="M30 38 L45 38 L50 48 L70 48" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="30" cy="38" r="3" fill="#00e5ff"/>
+  <circle cx="70" cy="48" r="3" fill="#00e5ff"/>
+  <!-- Cyber Padlock -->
+  <rect x="40" y="52" width="20" height="16" rx="3" fill="#00e5ff" />
+  <path d="M44 52 V44 C44 40.7 46.7 38 50 38 C53.3 38 56 40.7 56 44 V52" fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="60" r="2.5" fill="#0c162d"/>
+  <path d="M50 62.5 V65" stroke="#0c162d" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

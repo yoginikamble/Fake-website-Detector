@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}About Project - Fake Website Detector Using Web Security Analysis{% endblock %}
+
+{% block content %}
+<div class="container py-4 pb-5">
+  <!-- Title & Academic Banner -->
+  <div class="text-center mb-5">
+    <span class="hero-badge">Academic Project Documentation</span>
+    <h2 class="fw-bold text-light mt-2">Fake Website Detector Using Web Security Analysis</h2>
+    <p class="text-muted max-w-700 mx-auto">
+      B.Sc. Computer Science (TYCS) Final-Year Project Demonstration &amp; Examination Reference Guide
+    </p>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Core Documentation Sections -->
+    <div class="col-lg-8">
+      
+      <!-- 1. Introduction & Problem Statement -->
+      <div class="cyber-card p-4 mb-4">
+        <h4 class="fw-bold text-info mb-3">
+          <i class="fa-solid fa-book-open me-2"></i> 1. Introduction &amp; Problem Statement
+        </h4>
+        <p class="text-muted">
+          Phishing and fraudulent websites remain one of the most prolific threat vectors in modern cybercrime. 
+          Attackers routinely deploy lookalike domains, obscure URLs using link shorteners or unencoded IP addresses, 
+          and register internationalized homograph domains (Punycode) to impersonate financial institutions, social networks, 
+          and enterprise portals.
+        </p>
+        <p class="text-muted mb-0">
+          <strong>The Problem:</strong> Non-technical end-users struggle to identify nuanced signs of website deception. 
+          Furthermore, existing blacklists suffer from zero-day lag times, and relying on opaque AI models without explainability 
+          prevents users from understanding <em>why</em> a URL was flagged.
+        </p>
+      </div>
+
+      <!-- 2. Project Objectives & Scope -->
+      <div class="cyber-card p-4 mb-4">
+        <h4 class="fw-bold text-info mb-3">
+          <i class="fa-solid fa-bullseye me-2"></i> 2. Project Objectives &amp; System Scope
+        </h4>
+        <ul class="text-muted ps-3 mb-3">
+          <li class="mb-2">
+            <strong class="text-light">Automated Heuristic Evaluation:</strong> Extract verifiable lexical, structural, protocol, and network indicators directly from user-submitted URLs.
+          </li>
+          <li class="mb-2">
+            <strong class="text-light">Server-Side Request Forgery (SSRF) Defense:</strong> Implement defensive network probing that validates target IPs against private RFC1918 subnets, loopbacks, and link-local ranges before issuing HTTP probes.
+          </li>
+          <li class="mb-2">
+            <strong class="text-light">Transparent Rule-Based Scoring:</strong> Provide a fully explainable risk score between 0 and 100 based on weighted, documented indicators.
+          </li>
+          <li class="mb-2">
+            <strong class="text-light">Persistence &amp; Audit Trail:</strong> Store all scans in an embedded SQLite database for historical analysis and report generation.
+          </li>
+        </ul>
+        <div class="p-3 rounded bg-dark border border-secondary text-muted small">
+          <strong class="text-light">System Scope:</strong> The application is designed as an accessible, local security assessment tool. 
+          It evaluates publicly accessible web destinations without requiring invasive active exploitation or paid API subscriptions.
+        </div>
+      </div>
+
+      <!-- 3. Methodology & Architecture Pipeline -->
+      <div class="cyber-card p-4 mb-4">
+        <h4 class="fw-bold text-info mb-3">
+          <i class="fa-solid fa-diagram-project me-2"></i> 3. Technical Methodology
+        </h4>
+        <div class="timeline-steps">
+          <div class="p-3 mb-2 rounded bg-dark border border-secondary">
+            <div class="fw-bold text-light">Stage 1: Input Validation &amp; Sanitization</div>
+            <div class="small text-muted">
+              Validates protocol scheme (strictly HTTP/HTTPS), standardizes hostname casing, ensures valid RFC 1035 domain label lengths (max 63 chars per label, 253 overall).
+            </div>
+          </div>
+          <div class="p-3 mb-2 rounded bg-dark border border-secondary">
+            <div class="fw-bold text-light">Stage 2: SSRF Pre-Resolution Barrier</div>
+            <div class="small text-muted">
+              Resolves DNS hostnames to physical IP addresses and validates against blocked subnets (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 100.64.0.0/10).
+            </div>
+          </div>
+          <div class="p-3 mb-2 rounded bg-dark border border-secondary">
+            <div class="fw-bold text-light">Stage 3: Safe Controlled HTTP Probing</div>
+            <div class="small text-muted">
+              Issues non-credentialed HTTP GET with short connection timeout (4s), capping response stream to 256KB. Tracks and revalidates redirect destinations at every hop.
+            </div>
+          </div>
+          <div class="p-3 mb-2 rounded bg-dark border border-secondary">
+            <div class="fw-bold text-light">Stage 4: Feature Extraction &amp; Weight Aggregation</div>
+            <div class="small text-muted">
+              Inspects IP literal presence, Punycode, URL shorteners, sensitive keywords, TLD risk, SSL validity, and header defenses. Computes bounded risk score (0-100).
+            </div>
+          </div>
+          <div class="p-3 mb-2 rounded bg-dark border border-secondary">
+            <div class="fw-bold text-light">Stage 5: Machine Learning AI Inference</div>
+            <div class="small text-muted">
+              Extracts a 16-dimensional numerical vector and feeds it to a trained Random Forest model (100 decision trees) to compute phishing probability and feature importances.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Limitations & Future Scope -->
+      <div class="cyber-card p-4 mb-4">
+        <h4 class="fw-bold text-info mb-3">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i> 4. System Limitations &amp; Future Scope
+        </h4>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="text-light fw-bold">Current Limitations</h6>
+            <ul class="text-muted small ps-3">
+              <li>Heuristics cannot detect zero-hour compromised legitimate websites serving malware inside authentic domains.</li>
+              <li>WHOIS domain registration age checks require paid or rate-limited external registrar APIs and are disabled by default.</li>
+              <li>Static heuristics do not execute client-side JavaScript or DOM-based phishing overlays.</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-light fw-bold">Future Enhancements</h6>
+            <ul class="text-muted small ps-3">
+              <li>Integration of deep learning character-level CNN or Transformer embeddings on raw URL strings.</li>
+              <li>Headless browser DOM sandboxing to inspect visual favicon cloning and credential forms.</li>
+              <li>Chromium browser extension for real-time URL interception during daily web browsing.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Technology Stack & Examiner Viva Guide -->
+    <div class="col-lg-4">
+      
+      <!-- Tech Stack Summary -->
+      <div class="cyber-card p-4 mb-4">
+        <h5 class="fw-bold text-light mb-3">
+          <i class="fa-solid fa-layer-group text-info me-2"></i> Technology Stack
+        </h5>
+        <div class="d-flex flex-column gap-2 text-muted small">
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Backend:</span>
+            <span class="text-info font-monospace">Python 3.10+ / Flask</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Machine Learning:</span>
+            <span class="text-info font-monospace">Scikit-Learn (Random Forest)</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Database:</span>
+            <span class="text-info font-monospace">SQLite 3</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Frontend:</span>
+            <span class="text-info font-monospace">HTML5 / CSS3 / JS</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Styling:</span>
+            <span class="text-info font-monospace">Bootstrap 5 + Cyber CSS</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">Charts:</span>
+            <span class="text-info font-monospace">Chart.js 4</span>
+          </div>
+          <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+            <span class="text-light">HTTP Client:</span>
+            <span class="text-info font-monospace">Requests Session</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Examiner Viva FAQ Guide -->
+      <div class="cyber-card p-4">
+        <h5 class="fw-bold text-light mb-3">
+          <i class="fa-solid fa-user-graduate text-warning me-2"></i> Project Viva Guide
+        </h5>
+        <div class="accordion accordion-flush" id="vivaAccordion">
+          
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva1">
+                Q1: How do you prevent SSRF?
+              </button>
+            </h2>
+            <div id="viva1" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                We parse the hostname, resolve it to IP addresses with <code>socket.getaddrinfo</code>, and test with Python's <code>ipaddress</code> module to reject loopback (127.0.0.1), private subnets (192.168.x.x, 10.x.x.x), and link-local ranges before initiating any network connections.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva2">
+                Q2: What is Punycode?
+              </button>
+            </h2>
+            <div id="viva2" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                Punycode translates Unicode international characters into ASCII (prefixed with <code>xn--</code>). Attackers use it for IDN homograph attacks where Cyrillic letters look identical to Latin letters to spoof domains like <code>apple.com</code>.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva3">
+                Q3: Why use SQLite?
+              </button>
+            </h2>
+            <div id="viva3" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                SQLite is lightweight, serverless, zero-configuration, and stores data in a single local file. It supports full SQL queries, ACID compliance, and parameterized queries to eliminate SQL injection.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva4">
+                Q4: How is the score calculated?
+              </button>
+            </h2>
+            <div id="viva4" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                It uses a transparent rule-based algorithm: detected indicators contribute predefined weights (e.g. IP host: +25, '@' sign: +25, shortener: +16). The points are summed and bounded to 0-100, then mapped into Low, Medium, and High risk tiers.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva5">
+                Q5: How does the AI model work?
+              </button>
+            </h2>
+            <div id="viva5" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                We extract a 16-dimensional numerical feature vector from each URL and classify it using a Scikit-Learn <code>RandomForestClassifier</code> (ensemble of 100 decision trees) achieving over 93% accuracy on testing data.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-light p-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#viva6">
+                Q6: What is Explainable AI (XAI)?
+              </button>
+            </h2>
+            <div id="viva6" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+              <div class="accordion-body text-muted small pt-1 pb-3">
+                Rather than treating the AI as an opaque black box, our system extracts Random Forest feature importances (e.g. HTTPS status ~35%, domain length ~15%, hyphen counts ~13%) so users and examiners can see exactly which factors drove the prediction.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

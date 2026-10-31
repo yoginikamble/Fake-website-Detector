@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History - Fake Website Detector{% endblock %}
+
+{% block content %}
+<div class="container py-4 pb-5">
+  <!-- Page Header -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold text-light mb-1">
+        <i class="fa-solid fa-clock-rotate-left text-info me-2"></i> Scan History
+      </h2>
+      <p class="text-muted mb-0 small">
+        Archived website security scans stored in SQLite. Search, filter, inspect, or manage records.
+      </p>
+    </div>
+    
+    {% if scans %}
+      <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#clearAllModal">
+        <i class="fa-solid fa-trash-can me-1"></i> Clear All History
+      </button>
+    {% endif %}
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="cyber-card p-3 mb-4">
+    <form method="GET" action="{{ url_for('history') }}" class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-dark border-secondary text-muted">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input 
+            type="text" 
+            name="q" 
+            class="form-control bg-dark border-secondary text-light" 
+            placeholder="Search by URL or domain..."
+            value="{{ search_query }}"
+          >
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="col-md-3">
+        <select name="category" class="form-select bg-dark border-secondary text-light">
+          <option value="" {% if not category_filter %}selected{% endif %}>All Risk Categories</option>
+          <option value="low" {% if category_filter == 'low' %}selected{% endif %}>Low Risk</option>
+          <option value="medium" {% if category_filter == 'medium' %}selected{% endif %}>Medium Risk</option>
+          <option value="high" {% if category_filter == 'high' %}selected{% endif %}>High Risk</option>
+        </select>
+      </div>
+
+      <!-- Sort Direction -->
+      <div class="col-md-2">
+        <select name="sort" class="form-select bg-dark border-secondary text-light">
+          <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Newest First</option>
+          <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Oldest First</option>
+        </select>
+      </div>
+
+      <!-- Submit & Reset Buttons -->
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-info flex-grow-1 text-dark fw-semibold">
+          Filter
+        </button>
+        {% if search_query or category_filter or sort_order != 'desc' %}
+          <a href="{{ url_for('history') }}" class="btn btn-outline-secondary" title="Reset Filters">
+            <i class="fa-solid fa-arrow-rotate-left"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- History Records Table -->
+  <div class="cyber-card">
+    <div class="cyber-body p-0">
+      {% if scans %}
+        <div class="table-responsive">
+          <table class="table table-cyber align-middle mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Website URL</th>
+                <th>Date &amp; Time</th>
+                <th>Score</th>
+                <th>Risk Category</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for scan in scans %}
+                <tr>
+                  <td><span class="mono-tag">#{{ scan.id }}</span></td>
+                  <td>
+                    <div class="text-truncate fw-medium text-light" style="max-width: 320px;" title="{{ scan.normalized_url }}">
+                      {{ scan.normalized_url }}
+                    </div>
+                    {% if scan.resolved_ip %}
+                      <div class="small text-muted font-monospace" style="font-size: 0.75rem;">
+                        IP: {{ scan.resolved_ip }}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td class="text-muted small text-nowrap">
+                    {{ scan.scanned_at }}
+                  </td>
+                  <td>
+                    <span class="fw-bold {% if scan.risk_tier == 'high' %}text-danger{% elif scan.risk_tier == 'medium' %}text-warning{% else %}text-success{% endif %}">
+                      {{ scan.risk_score }} / 100
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ scan.risk_tier }}">
+                      {{ scan.risk_category }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="small text-muted">
+                      <i class="fa-solid fa-circle text-info me-1" style="font-size: 0.5rem;"></i>
+                      {{ scan.scan_status }}
+                    </span>
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <a href="{{ url_for('results', scan_id=scan.id) }}" class="btn btn-sm btn-outline-info me-1" title="View Detailed Report">
+                      <i class="fa-solid fa-eye"></i> View
+                    </a>
+                    
+                    <!-- Delete Individual Item Form -->
+                    <form action="{{ url_for('delete_history_item', scan_id=scan.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete scan #{{ scan.id }}?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Scan">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-magnifying-glass fs-1 mb-3 opacity-25"></i>
+          <h5 class="text-light">No Scan Records Found</h5>
+          <p class="small mb-3">
+            {% if search_query or category_filter %}
+              No scans matched your search criteria. Try clearing the filter or search query.
+            {% else %}
+              You haven't analyzed any websites yet.
+            {% endif %}
+          </p>
+          <a href="{{ url_for('index') }}#scanner-section" class="btn btn-info text-dark fw-semibold">
+            <i class="fa-solid fa-radar me-1"></i> Start First Scan
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Clear All Confirmation Modal -->
+<div class="modal fade" id="clearAllModal" tabindex="-1" aria-labelledby="clearAllModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content cyber-card border-danger">
+      <div class="modal-header border-secondary bg-dark">
+        <h5 class="modal-title text-danger" id="clearAllModalLabel">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Clear All History
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-light">
+        <p>Are you sure you want to permanently delete <strong>all stored scan history records</strong> from the database?</p>
+        <p class="small text-muted mb-0">This operation cannot be undone. All metric records will be reset.</p>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('clear_all_history') }}" method="POST">
+          <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash-can me-1"></i> Yes, Clear All History
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

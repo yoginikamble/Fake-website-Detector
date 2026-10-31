@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Fake Website Detector Using Web Security Analysis{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  <!-- Hero & Scanner Section -->
+  <section id="scanner-section" class="hero-scanner">
+    <div class="hero-badge">
+      <i class="fa-solid fa-microchip me-1"></i> Academic Security Scanner &bull; TYCS Project
+    </div>
+    
+    <h1 class="hero-title">
+      Detect Fake &amp; Suspicious Websites <br class="d-none d-md-inline">
+      <span class="text-info">Before Entering Sensitive Credentials</span>
+    </h1>
+    
+    <p class="hero-subtitle">
+      Automated risk assessment analyzing lexical anomalies, domain obfuscation,
+      Punycode deception, SSL certificate status, and safe redirection behavior.
+    </p>
+
+    <!-- Scan Input Box -->
+    <div class="scan-input-wrapper">
+      <form id="scanForm" action="{{ url_for('analyze') }}" method="POST">
+        <div class="input-cyber-group">
+          <div class="input-icon-box">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <input 
+            type="text" 
+            id="urlInput"
+            name="url" 
+            class="input-cyber" 
+            placeholder="Enter website URL (e.g. https://example.com or suspicious-bank-verify.xyz)" 
+            autocomplete="off"
+            required
+          >
+          <button type="submit" class="btn-cyber-analyze">
+            <i class="fa-solid fa-magnifying-glass-shield"></i>
+            <span>Analyze Website</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Sample Test Pills -->
+      <div class="sample-pills mt-3">
+        <span class="sample-label me-1"><i class="fa-solid fa-flask me-1"></i>Try Sample URLs:</span>
+        <a href="#" class="pill-cyber" data-url="https://google.com">
+          <i class="fa-solid fa-check text-success me-1"></i> google.com (Legitimate)
+        </a>
+        <a href="#" class="pill-cyber" data-url="http://go0gle.com">
+          <i class="fa-solid fa-masks-theater text-warning me-1"></i> go0gle.com (Typosquatting)
+        </a>
+        <a href="#" class="pill-cyber" data-url="http://paypal-security-update.account-verify.xyz/login">
+          <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Phishing-style URL
+        </a>
+        <a href="#" class="pill-cyber" data-url="https://xn--e1afmkfd.xn--p1ai">
+          <i class="fa-solid fa-font text-warning me-1"></i> Punycode (IDN)
+        </a>
+        <a href="#" class="pill-cyber" data-url="http://192.168.1.1/admin">
+          <i class="fa-solid fa-shield-virus text-info me-1"></i> Private IP (SSRF Test)
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security Disclaimer Banner -->
+  <div class="row justify-content-center my-4">
+    <div class="col-lg-10">
+      <div class="cyber-card p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #00e5ff;">
+        <i class="fa-solid fa-circle-exclamation text-info fs-3 flex-shrink-0"></i>
+        <div class="small text-muted">
+          <strong class="text-light">Security &amp; Academic Disclaimer:</strong> 
+          This tool performs preliminary heuristic evaluation based on visible syntactic, structural, and transport indicators. 
+          It does not guarantee whether a website is completely authentic or malicious, and is not a replacement for comprehensive commercial threat audits.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works & Architecture Section -->
+  <div class="row my-5 gy-4">
+    <div class="col-12 text-center mb-2">
+      <h3 class="fw-bold text-light">How the Security Analyzer Works</h3>
+      <p class="text-muted">A multi-layered rule-based inspection pipeline executed in milliseconds</p>
+    </div>
+
+    <div class="col-md-3">
+      <div class="cyber-card h-100 p-4 text-center">
+        <div class="stat-icon-box bg-dark text-info mx-auto mb-3">
+          <i class="fa-solid fa-code-compare"></i>
+        </div>
+        <h5 class="fw-bold text-light mb-2">1. Lexical &amp; Syntax</h5>
+        <p class="small text-muted mb-0">
+          Evaluates URL length, '@' masking symbols, double slashes, hyphen spam, and suspicious keywords.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="cyber-card h-100 p-4 text-center">
+        <div class="stat-icon-box bg-dark text-warning mx-auto mb-3">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h5 class="fw-bold text-light mb-2">2. SSRF Protection</h5>
+        <p class="small text-muted mb-0">
+          Blocks private RFC1918 subnets, localhost, loopback, and link-local destinations to protect the scanner host.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="cyber-card h-100 p-4 text-center">
+        <div class="stat-icon-box bg-dark text-success mx-auto mb-3">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h5 class="fw-bold text-light mb-2">3. SSL &amp; Transport</h5>
+        <p class="small text-muted mb-0">
+          Probes live HTTPS encryption, certificates, non-standard ports, and multiple redirect hops safely.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="cyber-card h-100 p-4 text-center">
+        <div class="stat-icon-box bg-dark text-danger mx-auto mb-3">
+          <i class="fa-solid fa-calculator"></i>
+        </div>
+        <h5 class="fw-bold text-light mb-2">4. Transparent Score</h5>
+        <p class="small text-muted mb-0">
+          Aggregates weighted indicator points into an explainable 0–100 risk score and actionable safety advice.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Scans Summary (When available) -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="cyber-card">
+        <div class="cyber-header">
+          <span class="text-light">
+            <i class="fa-solid fa-clock-rotate-left text-info me-2"></i> Recent Security Scans
+          </span>
+          <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-secondary">
+            View All History <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div class="cyber-body p-0">
+          {% if recent_scans %}
+            <div class="table-responsive">
+              <table class="table table-cyber mb-0 align-middle">
+                <thead>
+                  <tr>
+                    <th>Scan ID</th>
+                    <th>Analyzed Website</th>
+                    <th>Date &amp; Time</th>
+                    <th>Risk Score</th>
+                    <th>Category</th>
+                    <th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in recent_scans %}
+                    <tr>
+                      <td><span class="mono-tag">#{{ s.id }}</span></td>
+                      <td>
+                        <span class="text-light fw-medium d-inline-block text-truncate" style="max-width: 320px;" title="{{ s.normalized_url }}">
+                          {{ s.normalized_url }}
+                        </span>
+                      </td>
+                      <td class="text-muted small">{{ s.scanned_at }}</td>
+                      <td>
+                        <span class="fw-bold {% if s.risk_tier == 'high' %}text-danger{% elif s.risk_tier == 'medium' %}text-warning{% else %}text-success{% endif %}">
+                          {{ s.risk_score }} / 100
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-{{ s.risk_tier }}">
+                          {{ s.risk_category }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <a href="{{ url_for('results', scan_id=s.id) }}" class="btn btn-sm btn-outline-info">
+                          <i class="fa-solid fa-file-lines me-1"></i> View Report
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5 text-muted">
+              <i class="fa-solid fa-shield-cat fs-1 mb-2 opacity-50"></i>
+              <div>No scans recorded yet. Enter a website URL above to initiate your first risk evaluation!</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Security Dashboard - Fake Website Detector{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Dashboard Header -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold text-light mb-1">
+        <i class="fa-solid fa-chart-pie text-info me-2"></i> Security Analytics Dashboard
+      </h2>
+      <p class="text-muted mb-0 small">
+        Real-time telemetry and risk distribution calculated directly from stored SQLite scan history records.
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('index') }}#scanner-section" class="btn btn-info text-dark fw-semibold">
+        <i class="fa-solid fa-plus me-1"></i> New Analysis
+      </a>
+      <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-list me-1"></i> Full History
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metric Cards Row (Real Data) -->
+  <div class="row g-3 mb-4">
+    <!-- Total Scans -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div>
+          <div class="stat-title">Total Websites Scanned</div>
+          <div class="stat-number text-light">{{ stats.total_scans }}</div>
+          <div class="small text-muted mt-1"><i class="fa-solid fa-database me-1"></i>SQLite records</div>
+        </div>
+        <div class="stat-icon-box bg-dark text-info">
+          <i class="fa-solid fa-globe"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Low Risk -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div>
+          <div class="stat-title">Low Risk Results</div>
+          <div class="stat-number text-success">{{ stats.low_risk_count }}</div>
+          <div class="small text-muted mt-1">Score: 0 &ndash; 29 pts</div>
+        </div>
+        <div class="stat-icon-box bg-dark text-success">
+          <i class="fa-solid fa-shield-check"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medium Risk -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div>
+          <div class="stat-title">Medium Risk (Suspicious)</div>
+          <div class="stat-number text-warning">{{ stats.medium_risk_count }}</div>
+          <div class="small text-muted mt-1">Score: 30 &ndash; 59 pts</div>
+        </div>
+        <div class="stat-icon-box bg-dark text-warning">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- High Risk -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div>
+          <div class="stat-title">High Risk (Phishing Indicators)</div>
+          <div class="stat-number text-danger">{{ stats.high_risk_count }}</div>
+          <div class="small text-muted mt-1">Score: 60 &ndash; 100 pts</div>
+        </div>
+        <div class="stat-icon-box bg-dark text-danger">
+          <i class="fa-solid fa-skull-crossbones"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts & Activity Row -->
+  <div class="row g-4">
+    <!-- Left: Risk Distribution Chart -->
+    <div class="col-lg-5">
+      <div class="cyber-card h-100">
+        <div class="cyber-header">
+          <span class="text-light">
+            <i class="fa-solid fa-chart-donut text-info me-2"></i> Risk Tier Distribution
+          </span>
+          <span class="badge bg-dark border border-secondary text-info">
+            Avg Score: {{ stats.avg_risk_score }} / 100
+          </span>
+        </div>
+        <div class="cyber-body d-flex flex-column justify-content-center align-items-center" style="min-height: 320px;">
+          <!-- Chart Canvas with dynamic data attributes -->
+          <div style="position: relative; width: 100%; height: 260px;">
+            <canvas 
+              id="riskDistributionChart" 
+              data-low="{{ stats.low_risk_count }}"
+              data-medium="{{ stats.medium_risk_count }}"
+              data-high="{{ stats.high_risk_count }}"
+            ></canvas>
+          </div>
+          
+          <div id="emptyChartPlaceholder" class="text-center text-muted py-5" style="display: none;">
+            <i class="fa-solid fa-chart-pie fs-1 mb-2 opacity-25"></i>
+            <div>No scan data available yet to display chart.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Recent Activity -->
+    <div class="col-lg-7">
+      <div class="cyber-card h-100">
+        <div class="cyber-header">
+          <span class="text-light">
+            <i class="fa-solid fa-bolt text-warning me-2"></i> Recent Scan Activity
+          </span>
+          <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-secondary">
+            View All <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div class="cyber-body p-0">
+          {% if stats.recent_scans %}
+            <div class="list-group list-group-flush bg-transparent">
+              {% for scan in stats.recent_scans %}
+                <div class="list-group-item bg-transparent text-light border-secondary p-3 d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center gap-3 text-truncate">
+                    <div class="stat-icon-box bg-dark {% if scan.risk_tier == 'high' %}text-danger{% elif scan.risk_tier == 'medium' %}text-warning{% else %}text-success{% endif %} flex-shrink-0" style="width: 42px; height: 42px; font-size: 1.1rem;">
+                      {% if scan.risk_tier == 'high' %}
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                      {% elif scan.risk_tier == 'medium' %}
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                      {% else %}
+                        <i class="fa-solid fa-circle-check"></i>
+                      {% endif %}
+                    </div>
+                    <div class="text-truncate">
+                      <div class="fw-medium text-truncate" style="max-width: 320px;" title="{{ scan.normalized_url }}">
+                        {{ scan.normalized_url }}
+                      </div>
+                      <div class="small text-muted">
+                        <i class="fa-regular fa-clock me-1"></i>{{ scan.scanned_at }} &bull; Scan #{{ scan.id }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-end flex-shrink-0 ms-2">
+                    <div class="fw-bold {% if scan.risk_tier == 'high' %}text-danger{% elif scan.risk_tier == 'medium' %}text-warning{% else %}text-success{% endif %}">
+                      {{ scan.risk_score }} pts
+                    </div>
+                    <a href="{{ url_for('results', scan_id=scan.id) }}" class="btn btn-sm btn-link text-info p-0 text-decoration-none">
+                      Details <i class="fa-solid fa-chevron-right small"></i>
+                    </a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-5 text-muted">
+              <i class="fa-solid fa-inbox fs-2 mb-2 opacity-50"></i>
+              <div>No scans have been performed yet.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js 4 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

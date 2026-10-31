@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Report #{{ scan.id }} - Fake Website Detector{% endblock %}
+
+{% block content %}
+<div class="container py-4 pb-5">
+
+  <!-- Header & Action Bar -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="mono-tag">Scan #{{ scan.id }}</span>
+        <span class="text-muted small">&bull; {{ scan.scanned_at }}</span>
+        <span class="badge badge-{{ scan.risk_tier }} ms-1">{{ scan.risk_category }}</span>
+      </div>
+      <h3 class="fw-bold text-light text-break mb-0">
+        {{ scan.normalized_url }}
+      </h3>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <!-- Export Dropdown -->
+      <div class="dropdown">
+        <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa-solid fa-download me-1"></i> Download Report
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+          <li>
+            <a class="dropdown-item" href="{{ url_for('export_report', scan_id=scan.id, format_type='txt') }}">
+              <i class="fa-regular fa-file-lines me-2 text-info"></i> Plain Text (.txt)
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ url_for('export_report', scan_id=scan.id, format_type='csv') }}">
+              <i class="fa-solid fa-file-csv me-2 text-success"></i> Spreadsheet (.csv)
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ url_for('export_report', scan_id=scan.id, format_type='json') }}">
+              <i class="fa-solid fa-code me-2 text-warning"></i> Machine JSON (.json)
+            </a>
+          </li>
+        </ul>
+      </div>
+      <a href="{{ url_for('index') }}#scanner-section" class="btn btn-info text-dark fw-semibold">
+        <i class="fa-solid fa-rotate-right me-1"></i> Scan Another URL
+      </a>
+    </div>
+  </div>
+
+  <!-- Top Hero Risk Score & Verdict Row -->
+  <div class="row g-4 mb-4">
+    <!-- Visual Risk Meter Gauge Card -->
+    <div class="col-lg-4">
+      <div class="cyber-card h-100 meter-card-container text-center justify-content-between">
+        <div class="w-100 text-start border-bottom pb-2 border-secondary mb-3">
+          <span class="small text-uppercase fw-bold text-muted">Aggregated Risk Index</span>
+        </div>
+
+        <!-- Custom Semicircle SVG Gauge -->
+        <div class="my-auto py-2">
+          <svg viewBox="0 0 200 110" width="220" height="120">
+            <!-- Background Arc (0 to 100) -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="18" stroke-linecap="round"/>
+            
+            <!-- Value Arc Calculation: Stroke Dasharray -->
+            {% set score = scan.risk_score %}
+            {% set total_arc = 251.3 %}
+            {% set filled_arc = (score / 100.0) * total_arc %}
+            
+            {% if score < 30 %}
+              {% set stroke_color = "#10b981" %}
+            {% elif score < 60 %}
+              {% set stroke_color = "#f59e0b" %}
+            {% else %}
+              {% set stroke_color = "#ef4444" %}
+            {% endif %}
+
+            <path 
+              d="M 20 100 A 80 80 0 0 1 180 100" 
+              fill="none" 
+              stroke="{{ stroke_color }}" 
+              stroke-width="18" 
+              stroke-linecap="round"
+              stroke-dasharray="{{ filled_arc }} {{ total_arc }}"
+            />
+
+            <!-- Score Text in Center -->
+            <text x="100" y="85" text-anchor="middle" font-size="36" font-weight="800" fill="#ffffff" font-family="-apple-system, sans-serif">
+              {{ scan.risk_score }}
+            </text>
+            <text x="100" y="105" text-anchor="middle" font-size="12" fill="#94a3b8" font-family="-apple-system, sans-serif">
+              OUT OF 100
+            </text>
+          </svg>
+
+          <div class="mt-2">
+            <span class="badge badge-{{ scan.risk_tier }} fs-6 px-3 py-2">
+              {{ scan.risk_category }}
+            </span>
+          </div>
+        </div>
+
+        <div class="w-100 text-muted small border-top pt-2 border-secondary mt-3">
+          Scale: 0-29 Low &bull; 30-59 Medium &bull; 60-100 High
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall Assessment & Key Parameters -->
+    <div class="col-lg-8">
+      <div class="cyber-card h-100 p-4 d-flex flex-column justify-content-between">
+        <div>
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="fw-bold text-light mb-0">Analysis Summary &amp; Verdict</h5>
+            <span class="small text-muted"><i class="fa-solid fa-server me-1"></i>Status: {{ scan.scan_status }}</span>
+          </div>
+          
+          <div class="p-3 rounded mb-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle);">
+            <div class="fw-medium text-light mb-1">
+              {% if scan.risk_tier == 'high' %}
+                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>
+              {% elif scan.risk_tier == 'medium' %}
+                <i class="fa-solid fa-circle-exclamation text-warning me-2"></i>
+              {% else %}
+                <i class="fa-solid fa-circle-check text-success me-2"></i>
+              {% endif %}
+              Assessment Finding:
+            </div>
+            <p class="text-muted mb-0 small">
+              {{ scoring.verdict_summary }}
+            </p>
+          </div>
+
+          <!-- 4 Fast Status Tiles -->
+          <div class="row g-2">
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded bg-dark border border-secondary text-center">
+                <div class="text-muted small">Protocol</div>
+                <div class="fw-bold {% if features.live_fetch.completed and features.protocol_and_port.is_https %}text-success{% elif not features.live_fetch.completed and features.dns_reachability.dns_failed %}text-secondary{% elif features.protocol_and_port.is_https %}text-info{% else %}text-warning{% endif %}">
+                  {% if not features.live_fetch.completed and features.dns_reachability.dns_failed %}
+                    Unverified (Offline)
+                  {% elif features.protocol_and_port.is_https %}
+                    HTTPS
+                  {% else %}
+                    HTTP (Insecure)
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded bg-dark border border-secondary text-center">
+                <div class="text-muted small">Host Identity</div>
+                <div class="fw-bold {% if features.typosquatting.is_detected %}text-danger{% elif features.ip_address_host.is_detected %}text-danger{% else %}text-success{% endif %}">
+                  {% if features.typosquatting.is_detected %}
+                    Lookalike Impersonation
+                  {% elif features.ip_address_host.is_detected %}
+                    Raw IP Host
+                  {% else %}
+                    Domain Host
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded bg-dark border border-secondary text-center">
+                <div class="text-muted small">URL Length</div>
+                <div class="fw-bold {% if features.url_length.is_excessive %}text-danger{% elif features.url_length.is_medium %}text-warning{% else %}text-success{% endif %}">
+                  {{ features.url_length.value }} chars
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded bg-dark border border-secondary text-center">
+                <div class="text-muted small">Resolved IP</div>
+                <div class="fw-bold text-info text-truncate" title="{{ validation.resolved_ip or 'Unresolved' }}">
+                  {{ validation.resolved_ip or 'Unresolved' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="small text-muted mt-3">
+          <i class="fa-solid fa-circle-info text-info me-1"></i>
+          {{ validation.dns_message or 'DNS resolution executed under strict SSRF isolation.' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Machine Learning AI Threat Predictor Card -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="cyber-card p-4" style="border: 1px solid rgba(0, 229, 255, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(19, 30, 54, 0.95) 100%);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between pb-3 border-bottom border-secondary mb-3 gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="stat-icon-box bg-dark text-info" style="width: 42px; height: 42px;">
+              <i class="fa-solid fa-brain fs-5"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold text-light mb-0">Machine Learning AI Classifier Assessment</h5>
+              <div class="small text-muted">{{ ai_prediction.model_name or 'Random Forest Ensemble (100 Decision Trees)' }}</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-{{ ai_prediction.badge_class or 'secondary' }} fs-6 px-3 py-2">
+              <i class="fa-solid fa-microchip me-1"></i> {{ ai_prediction.ai_verdict or 'AI Evaluation Complete' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="row g-3 align-items-center">
+          <!-- AI Probability Meter -->
+          <div class="col-md-5">
+            <div class="p-3 rounded bg-dark border border-secondary text-center">
+              <div class="small text-muted mb-1">AI Phishing Probability Score</div>
+              <div class="display-6 fw-bold {% if ai_prediction.phishing_probability >= 60 %}text-danger{% elif ai_prediction.phishing_probability >= 30 %}text-warning{% else %}text-success{% endif %}">
+                {{ ai_prediction.phishing_probability or 0 }}%
+              </div>
+              <div class="progress mt-2 mb-2" style="height: 10px; background-color: #1e293b;">
+                <div class="progress-bar {% if ai_prediction.phishing_probability >= 60 %}bg-danger{% elif ai_prediction.phishing_probability >= 30 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ ai_prediction.phishing_probability or 0 }}%;" aria-valuenow="{{ ai_prediction.phishing_probability or 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <div class="d-flex justify-content-between small text-muted">
+                <span>0% (Legitimate)</span>
+                <span>100% (Phishing)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ensemble & Top Features -->
+          <div class="col-md-7">
+            <div class="small text-light fw-bold mb-2">
+              <i class="fa-solid fa-chart-column text-info me-1"></i> Top Contributing Features (Explainable AI / XAI):
+            </div>
+            <div class="row g-2">
+              {% if ai_prediction.top_features %}
+                {% for feat in ai_prediction.top_features %}
+                  <div class="col-6">
+                    <div class="p-2 rounded bg-dark border border-secondary small">
+                      <div class="text-muted d-flex justify-content-between">
+                        <span class="text-truncate me-1">{{ feat.name }}</span>
+                        <span class="text-info flex-shrink-0">{{ feat.importance }}% wt</span>
+                      </div>
+                      <div class="fw-bold text-light mt-1">Value: {{ feat.value }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="col-12 text-muted small">Standard baseline feature vectors applied.</div>
+              {% endif %}
+            </div>
+            <div class="mt-2 text-muted small">
+              <i class="fa-solid fa-circle-check text-info me-1"></i>
+              Dual-Engine Architecture: Validates rule-based heuristics against statistical decision trees.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Findings & Positive/Negative Tabs -->
+  <div class="row g-4 mb-4">
+    <!-- Negative Risk Indicators -->
+    <div class="col-lg-6">
+      <div class="cyber-card h-100">
+        <div class="cyber-header bg-dark">
+          <span class="text-light">
+            <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>
+            Detected Risk Indicators ({{ scoring.negative_findings|length }})
+          </span>
+          <span class="small text-muted">Contributed to Score</span>
+        </div>
+        <div class="cyber-body">
+          {% if scoring.negative_findings %}
+            {% for item in scoring.negative_findings %}
+              <div class="finding-item negative-{{ item.severity }}">
+                <div class="finding-title">
+                  <span class="text-light">
+                    <span class="badge bg-secondary me-1 text-uppercase" style="font-size: 0.65rem;">{{ item.category }}</span>
+                    {{ item.indicator }}
+                  </span>
+                  <span class="finding-points {% if item.severity == 'high' %}bg-danger text-light{% elif item.severity == 'medium' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                    +{{ item.points }} pts
+                  </span>
+                </div>
+                <p class="finding-desc">{{ item.description }}</p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4 text-success">
+              <i class="fa-solid fa-shield-check fs-1 mb-2"></i>
+              <div class="fw-semibold">No negative indicators detected!</div>
+              <div class="small text-muted">The tested URL passed all configured lexical and structural checks.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Positive Security Practices -->
+    <div class="col-lg-6">
+      <div class="cyber-card h-100">
+        <div class="cyber-header bg-dark">
+          <span class="text-light">
+            <i class="fa-solid fa-circle-check text-success me-2"></i>
+            Positive Security Attributes ({{ scoring.positive_findings|length }})
+          </span>
+          <span class="small text-muted">Good Practices Found</span>
+        </div>
+        <div class="cyber-body">
+          {% if scoring.positive_findings %}
+            {% for item in scoring.positive_findings %}
+              <div class="finding-item positive">
+                <div class="finding-title text-light">
+                  <span>{{ item.indicator }}</span>
+                  <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-check me-1"></i> Passed
+                  </span>
+                </div>
+                <p class="finding-desc">{{ item.description }}</p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4 text-muted">
+              <div>No positive security attributes recorded.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transparent Uncompleted Checks & Recommendations Row -->
+  <div class="row g-4">
+    <!-- Uncompleted / Not-Applicable Checks -->
+    <div class="col-lg-6">
+      <div class="cyber-card h-100">
+        <div class="cyber-header bg-dark">
+          <span class="text-light">
+            <i class="fa-solid fa-eye-slash text-info me-2"></i>
+            Indicators Not Checked or Not Applicable
+          </span>
+        </div>
+        <div class="cyber-body">
+          <p class="small text-muted mb-3">
+            Academic transparency requirement: The system explicitly states which indicators could not be verified rather than guessing.
+          </p>
+          {% for item in scoring.checks_uncompleted %}
+            <div class="p-2 mb-2 rounded bg-dark border border-secondary">
+              <div class="fw-semibold text-light small">
+                <i class="fa-solid fa-minus text-muted me-1"></i> {{ item.check }}
+              </div>
+              <div class="small text-muted ps-3">{{ item.reason }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommended Safety Actions -->
+    <div class="col-lg-6">
+      <div class="cyber-card h-100">
+        <div class="cyber-header bg-dark">
+          <span class="text-light">
+            <i class="fa-solid fa-clipboard-check text-warning me-2"></i>
+            Recommended Safety Actions
+          </span>
+        </div>
+        <div class="cyber-body">
+          <ul class="list-unstyled mb-0">
+            {% for rec in scoring.recommendations %}
+              <li class="d-flex align-items-start gap-2 mb-2 pb-2 border-bottom border-secondary last-no-border">
+                <i class="fa-solid fa-shield-virus text-warning mt-1 flex-shrink-0"></i>
+                <span class="small text-light">{{ rec }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
